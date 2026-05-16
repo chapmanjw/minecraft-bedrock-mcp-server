@@ -108,8 +108,8 @@ This walkthrough takes you from nothing to an AI agent building in your world. I
 
    Leave the rest at their defaults for now. You will set `level-name` in Step 3.
 
-For more detail (firewall rules, running BDS as a `systemd` service, backups), search "Bedrock
-Dedicated Server" in the Minecraft help center at <https://help.minecraft.net>.
+Step 7 covers running BDS as a `systemd` service. For more detail (firewall rules, backups),
+search "Bedrock Dedicated Server" in the Minecraft help center at <https://help.minecraft.net>.
 
 ## Step 2 — Create a compatible world
 
@@ -230,7 +230,12 @@ copy-ready versions under its `config/default/`):
 
 ## Step 7 — Start everything
 
-Start the MCP server, then the Bedrock server:
+You can start the two processes by hand, or — recommended — install them as `systemd` services so
+they survive logout, restart on crash, and start at boot.
+
+### Option A — run in the foreground
+
+Start the MCP server, then the Bedrock server, in two terminals:
 
 ```sh
 # Terminal 1 — the MCP server
@@ -239,6 +244,92 @@ minecraft-bedrock-mcp-server          # reads .env from the working directory
 # Terminal 2 — the Bedrock Dedicated Server
 cd /opt/bedrock-server && LD_LIBRARY_PATH=. ./bedrock_server
 ```
+
+### Option B — run as systemd services (recommended)
+
+This is how the two processes are run in a typical long-lived deployment.
+
+1. Create a dedicated unprivileged user to own and run both processes, and hand it the files:
+
+   ```sh
+   sudo useradd --system --no-create-home --shell /usr/sbin/nologin minecraft
+   sudo chown -R minecraft:minecraft /opt/bedrock-server
+   ```
+
+2. Move the MCP server's `.env` (from Step 5) somewhere the service can read it, and lock it down
+   — it holds both bearer tokens:
+
+   ```sh
+   sudo mkdir -p /etc/minecraft-bedrock-mcp
+   sudo cp .env /etc/minecraft-bedrock-mcp/.env
+   sudo chown -R minecraft:minecraft /etc/minecraft-bedrock-mcp
+   sudo chmod 600 /etc/minecraft-bedrock-mcp/.env
+   ```
+
+3. Create `/etc/systemd/system/bedrock-server.service`:
+
+   ```ini
+   [Unit]
+   Description=Minecraft Bedrock Dedicated Server
+   After=network.target
+
+   [Service]
+   Type=simple
+   User=minecraft
+   Group=minecraft
+   WorkingDirectory=/opt/bedrock-server
+   Environment=LD_LIBRARY_PATH=/opt/bedrock-server
+   ExecStart=/opt/bedrock-server/bedrock_server
+   Restart=on-failure
+   RestartSec=10
+   StandardInput=null
+   StandardOutput=journal
+   StandardError=journal
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+4. Create `/etc/systemd/system/mc-mcp-server.service`:
+
+   ```ini
+   [Unit]
+   Description=Minecraft Bedrock MCP server
+   After=network.target bedrock-server.service
+
+   [Service]
+   Type=simple
+   User=minecraft
+   Group=minecraft
+   EnvironmentFile=/etc/minecraft-bedrock-mcp/.env
+   ExecStart=/usr/bin/minecraft-bedrock-mcp-server
+   Restart=on-failure
+   RestartSec=10
+   StandardOutput=journal
+   StandardError=journal
+
+   [Install]
+   WantedBy=multi-user.target
+   ```
+
+   `ExecStart` points at the global install from Step 5. Run `command -v minecraft-bedrock-mcp-server`
+   to confirm its path on your host and adjust the line if it differs.
+
+5. Enable and start both — the MCP server first, so the bridge is listening when the world loads:
+
+   ```sh
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now mc-mcp-server bedrock-server
+   ```
+
+6. Check status and follow the logs:
+
+   ```sh
+   systemctl status mc-mcp-server bedrock-server
+   journalctl -u mc-mcp-server -f
+   ```
+
+### Confirm the handshake
 
 When the world loads, the behavior pack handshakes with the bridge. The MCP server logs the
 successful handshake, and BDS logs that the `bedrock-bridge` pack's script started. If the
