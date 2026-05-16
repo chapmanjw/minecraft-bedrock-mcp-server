@@ -19,7 +19,9 @@
       "PowerShell(\"=== BUILD ===\")",
       "PowerShell(npm run format 2>&1)",
       "PowerShell(npm run format:check 2>&1)",
-      "PowerShell(\"=== FORMAT ===\")"
+      "PowerShell(\"=== FORMAT ===\")",
+      "Bash(npm run *)",
+      "Bash(npx prettier *)"
     ]
   }
 }

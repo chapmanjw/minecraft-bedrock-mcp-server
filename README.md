@@ -18,9 +18,9 @@ behavior pack, and this server upgraded together. Treat the whole stack as exper
 
 This system is split across two repositories:
 
-| Repository                                                                                          | Role                                                                              |
-| ---------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| **`minecraft-bedrock-mcp-server`** (this repo)                                                       | The MCP server. Speaks MCP to clients and bridges commands to the world.           |
+| Repository                                                                                                    | Role                                                                                   |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **`minecraft-bedrock-mcp-server`** (this repo)                                                                | The MCP server. Speaks MCP to clients and bridges commands to the world.               |
 | **[`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)** | The BDS behavior pack. Runs inside the world and executes commands via the Script API. |
 
 This README is the **end-to-end guide** — it covers standing up the whole stack. The behavior
@@ -100,11 +100,11 @@ This walkthrough takes you from nothing to an AI agent building in your world. I
 
 4. Edit `server.properties`. The settings that matter for this project:
 
-   | Setting        | Value      | Why                                                         |
-   | -------------- | ---------- | ----------------------------------------------------------- |
-   | `level-name`   | _your world folder name_ | Selects which world under `worlds/` to load.    |
-   | `allow-cheats` | `true`     | Required for `mc_run_command` and command-backed tools.     |
-   | `gamemode`     | `creative` | Recommended so agents can place and break freely.           |
+   | Setting        | Value                    | Why                                                     |
+   | -------------- | ------------------------ | ------------------------------------------------------- |
+   | `level-name`   | _your world folder name_ | Selects which world under `worlds/` to load.            |
+   | `allow-cheats` | `true`                   | Required for `mc_run_command` and command-backed tools. |
+   | `gamemode`     | `creative`               | Recommended so agents can place and break freely.       |
 
    Leave the rest at their defaults for now. You will set `level-name` in Step 3.
 
@@ -119,11 +119,11 @@ turn it on. So create the world on your PC/device first, then move it to the ser
 
 In Minecraft: Bedrock Edition, choose **Create New World** and set:
 
-| Setting                       | Value         | Why                                                              |
-| ------------------------------ | ------------- | ----------------------------------------------------------------- |
-| **Game Mode**                  | Creative      | Agents place/break blocks and spawn entities freely.              |
-| **Cheats** (Activate Cheats)   | On            | Enables commands; pairs with `allow-cheats` on the server.        |
-| **Experiments → Beta APIs**    | On            | **Required.** `@minecraft/server-net` / `-admin` are beta modules. |
+| Setting                      | Value    | Why                                                                |
+| ---------------------------- | -------- | ------------------------------------------------------------------ |
+| **Game Mode**                | Creative | Agents place/break blocks and spawn entities freely.               |
+| **Cheats** (Activate Cheats) | On       | Enables commands; pairs with `allow-cheats` on the server.         |
+| **Experiments → Beta APIs**  | On       | **Required.** `@minecraft/server-net` / `-admin` are beta modules. |
 
 Then **play the world once** for a few seconds so it is fully written to disk, and exit.
 
@@ -269,7 +269,13 @@ Add a `minecraft-bedrock` entry under `mcpServers`:
   "mcpServers": {
     "minecraft-bedrock": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "http://YOUR-SERVER-HOST:8765/mcp", "--header", "Authorization:${AUTH_HEADER}"],
+      "args": [
+        "-y",
+        "mcp-remote",
+        "http://YOUR-SERVER-HOST:8765/mcp",
+        "--header",
+        "Authorization:${AUTH_HEADER}"
+      ],
       "env": {
         "AUTH_HEADER": "Bearer <the BRIDGE_CLIENT_TOKEN first secret>"
       }
@@ -443,7 +449,7 @@ Internal structure — the HTTP framework, module layout, logging format — is 
 contract and may change at any time. The bridge protocol is versioned independently; its major
 version is negotiated at handshake.
 
-Note that this contract is the *server's* contract. The **underlying Bedrock Script API is not
+Note that this contract is the _server's_ contract. The **underlying Bedrock Script API is not
 stable** (see the warning at the top): a Bedrock update can still break behavior even when this
 server's contract is unchanged.
 
