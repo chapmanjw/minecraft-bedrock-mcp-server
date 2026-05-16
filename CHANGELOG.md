@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-05-16
+
+Initial release. Pairs with [`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)
+v0.1.0 — install both together.
+
 ### Added
 
 - Bridge protocol — `zod` schemas and inferred types for the command, result, event, and
