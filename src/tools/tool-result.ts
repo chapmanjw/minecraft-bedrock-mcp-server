@@ -1,33 +1,42 @@
+import { encode } from "@toon-format/toon";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { BridgeError } from "../errors/bridge-error.js";
 import type { CommandResult } from "../protocol/index.js";
 
-function describe(data: unknown): string {
+/**
+ * Serializes a tool payload as TOON (Token-Oriented Object Notation).
+ *
+ * TOON is a compact, LLM-oriented encoding of the JSON data model: it drops
+ * JSON's braces, quotes, and repeated keys, and renders uniform object arrays
+ * as a single header plus CSV-style rows. For the tabular results this server
+ * produces — block volumes, entity component dumps, player and event lists —
+ * that is materially fewer tokens than JSON, and never more than the
+ * pretty-printed JSON this previously emitted.
+ */
+function serialize(data: unknown): string {
   if (data === undefined) return "(no content)";
-  return JSON.stringify(data, null, 2);
+  return encode(data);
 }
 
 /**
  * Builds a successful tool result.
  *
- * The structured content is always `{ result: <data> }` so every tool's
- * machine-readable output has a consistent shape.
+ * The payload is carried once, as a TOON text block. Tools declare no
+ * `outputSchema`, so no redundant `structuredContent` copy is emitted — the
+ * text block is the single machine- and human-readable representation.
  */
 export function toolSuccess(data: unknown): CallToolResult {
   return {
-    content: [{ type: "text", text: describe(data) }],
-    structuredContent: { result: data },
+    content: [{ type: "text", text: serialize(data) }],
     isError: false,
   };
 }
 
 /** Builds a failed tool result carrying a stable error code. */
 export function toolError(code: string, message: string, details?: unknown): CallToolResult {
+  const error = { code, message, ...(details === undefined ? {} : { details }) };
   return {
-    content: [{ type: "text", text: `${code}: ${message}` }],
-    structuredContent: {
-      error: { code, message, ...(details === undefined ? {} : { details }) },
-    },
+    content: [{ type: "text", text: encode({ error }) }],
     isError: true,
   };
 }

@@ -21,3 +21,9 @@ All notable changes to this project are documented in this file. The format is b
 - Subscription registry and structure-file store backing the event and filesystem tools.
 - Optional Prometheus `/metrics` endpoint, enabled with `BRIDGE_METRICS_ENABLED`.
 - `Dockerfile` for containerized deployment and a CI workflow.
+
+### Changed
+
+- Tool results are serialized as TOON (Token-Oriented Object Notation) instead of
+  pretty-printed JSON, and the redundant `structuredContent` copy is dropped — the
+  payload is now carried once, in a single text block, to cut MCP client token usage.

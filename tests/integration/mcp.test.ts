@@ -1,3 +1,4 @@
+import { encode } from "@toon-format/toon";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
@@ -81,6 +82,7 @@ describe("mcp surface", () => {
 
     const result = await callPromise;
     expect(result.isError).toBeFalsy();
-    expect(result.structuredContent).toEqual({ result: { output: "hello" } });
+    expect(result.structuredContent).toBeUndefined();
+    expect(result.content).toEqual([{ type: "text", text: encode({ output: "hello" }) }]);
   });
 });
