@@ -433,11 +433,19 @@ Run it directly without installing:
 npx minecraft-bedrock-mcp-server
 ```
 
-Or with Docker:
+Or with Docker. Each `v*` tag publishes a multi-arch image (`linux/amd64`,
+`linux/arm64`) to the GitHub Container Registry — pull and run it directly:
 
 ```sh
-docker build -t bedrock-bridge .
-docker run --env-file .env -p 8765:8765 bedrock-bridge
+docker run --env-file .env -p 8765:8765 ghcr.io/chapmanjw/minecraft-bedrock-mcp-server:latest
+```
+
+Pin to a specific version (e.g. `:0.1.0`) for reproducible deployments. To build the
+image from source instead:
+
+```sh
+docker build -t minecraft-bedrock-mcp-server .
+docker run --env-file .env -p 8765:8765 minecraft-bedrock-mcp-server
 ```
 
 ## Configuration reference
