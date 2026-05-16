@@ -54,3 +54,40 @@ jobs:
           sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Publishes the package to the public npm registry on every version tag.
+  publish-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout
+      id-token: write # npm trusted publishing (OIDC) — no NPM_TOKEN needed
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verify tag matches package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg="$(node -p "require('./package.json').version")"
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match package.json version $pkg"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm test
+      - run: npm run build
+
+      # Trusted publishing (OIDC) requires npm >= 11.5.1; Node 20 ships npm 10.
+      - name: Upgrade npm
+        run: npm install -g npm@latest
+
+      - name: Publish to npm
+        run: npm publish --provenance --access public
