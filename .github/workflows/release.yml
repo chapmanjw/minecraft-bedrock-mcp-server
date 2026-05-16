@@ -91,3 +91,51 @@ jobs:
 
       - name: Publish to npm
         run: npm publish --provenance --access public
+
+  # Creates the GitHub Release once the npm package and image are published.
+  github-release:
+    needs: [publish-npm, publish-image]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # create the release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build the distributable tarball
+        run: |
+          npm ci
+          npm run build
+          npm pack
+
+      - name: Extract release notes from the changelog
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v ver="$version" '
+            index($0, "## [" ver "]") == 1 { flag = 1; next }
+            flag && index($0, "## [") == 1 { exit }
+            flag { print }
+          ' CHANGELOG.md > notes.md
+          if [ ! -s notes.md ]; then
+            echo "::warning::no changelog section for $version; falling back to generated notes"
+          fi
+
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          args=(--title "$GITHUB_REF_NAME" --verify-tag)
+          if [ -s notes.md ]; then
+            args+=(--notes-file notes.md)
+          else
+            args+=(--generate-notes)
+          fi
+          # A tag with a pre-release suffix (e.g. v1.0.0-rc.1) is a pre-release.
+          case "$GITHUB_REF_NAME" in
+            *-*) args+=(--prerelease) ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" "${args[@]}" \
+            ./minecraft-bedrock-mcp-server-*.tgz
