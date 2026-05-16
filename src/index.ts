@@ -8,8 +8,10 @@ import { createApp } from "./http/app.js";
 import { createMcpServer } from "./mcp/mcp-server-factory.js";
 import { createSessionManager } from "./mcp/session-manager.js";
 import { createLogger } from "./observability/logger.js";
-import { createCommandQueue } from "./queue/command-queue.js";
+import { createMetrics, type Metrics } from "./observability/metrics.js";
+import { createCommandQueue, type CommandQueue } from "./queue/command-queue.js";
 import { createCommandThrottle } from "./queue/command-throttle.js";
+import { createInstrumentedCommandQueue } from "./queue/instrumented-command-queue.js";
 import { SERVER_NAME, SERVER_VERSION } from "./server-info.js";
 import { createStructureFileStore } from "./structures/structure-file-store.js";
 
@@ -63,7 +65,7 @@ async function main(): Promise<void> {
     );
   }
 
-  const queue = createCommandQueue({
+  const baseQueue = createCommandQueue({
     throttle: createCommandThrottle({ defaultPolicy: DEFAULT_THROTTLE }),
     maxOutstanding: environment.BRIDGE_QUEUE_MAX,
     livenessWindowMs: environment.BRIDGE_POLL_TIMEOUT_MS * 2,
@@ -72,6 +74,21 @@ async function main(): Promise<void> {
   const structureFiles = createStructureFileStore(
     join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures"),
   );
+
+  // When metrics are enabled, the queue is wrapped to record command metrics
+  // and the gauges sample the base queue and session manager at scrape time.
+  let metrics: Metrics | undefined;
+  let queue: CommandQueue = baseQueue;
+  if (environment.BRIDGE_METRICS_ENABLED) {
+    metrics = createMetrics({
+      queueDepth: () => baseQueue.stats().depth,
+      commandsInFlight: () => baseQueue.stats().inFlight,
+      bridgeConnected: () => baseQueue.stats().bridgeConnected,
+      mcpSessions: () => sessionManager.count(),
+    });
+    queue = createInstrumentedCommandQueue(baseQueue, metrics);
+  }
+
   const sessionManager = createSessionManager({
     logger,
     createServer: () =>
@@ -83,7 +100,15 @@ async function main(): Promise<void> {
         commandTimeoutMs: environment.BRIDGE_COMMAND_TIMEOUT_MS,
       }),
   });
-  const app = createApp({ environment, logger, queue, subscriptions, sessionManager, tls });
+  const app = createApp({
+    environment,
+    logger,
+    queue,
+    subscriptions,
+    sessionManager,
+    metrics,
+    tls,
+  });
 
   let shuttingDown = false;
   async function shutdown(signal: NodeJS.Signals): Promise<void> {
@@ -114,6 +139,7 @@ async function main(): Promise<void> {
       name: SERVER_NAME,
       version: SERVER_VERSION,
       address: `${scheme}://${environment.BRIDGE_HOST}:${environment.BRIDGE_PORT}`,
+      metrics: environment.BRIDGE_METRICS_ENABLED,
     },
     "bridge server listening",
   );

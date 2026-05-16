@@ -58,10 +58,7 @@ export function createCommandThrottle(options: CommandThrottleOptions): CommandT
       const bucket = buckets.get(kind) ?? { tokens: policy.burst, updatedAt: at };
 
       const elapsedSeconds = Math.max(0, at - bucket.updatedAt) / 1000;
-      bucket.tokens = Math.min(
-        policy.burst,
-        bucket.tokens + elapsedSeconds * policy.ratePerSecond,
-      );
+      bucket.tokens = Math.min(policy.burst, bucket.tokens + elapsedSeconds * policy.ratePerSecond);
       bucket.updatedAt = at;
       buckets.set(kind, bucket);
 

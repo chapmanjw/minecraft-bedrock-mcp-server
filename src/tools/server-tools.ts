@@ -5,8 +5,7 @@ export const serverTools: readonly ToolDefinition[] = [
   defineQueuedTool({
     name: "mc_server_reload_addons",
     title: "Reload addons",
-    description:
-      "Reloads behavior and resource pack scripts and functions — the /reload command.",
+    description: "Reloads behavior and resource pack scripts and functions — the /reload command.",
     inputShape: {},
   }),
   defineQueuedTool({

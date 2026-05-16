@@ -14,8 +14,7 @@ export const playerTools: readonly ToolDefinition[] = [
   defineQueuedTool({
     name: "mc_player_list",
     title: "List players",
-    description:
-      "Returns the name, id, location, dimension, and game mode of every online player.",
+    description: "Returns the name, id, location, dimension, and game mode of every online player.",
     inputShape: {},
     annotations: { readOnlyHint: true },
   }),

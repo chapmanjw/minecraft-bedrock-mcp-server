@@ -36,9 +36,15 @@ const EnvironmentSchema = z.object({
   /** Trust `X-Forwarded-*` headers — enable when running behind a reverse proxy. */
   BRIDGE_TRUST_PROXY: EnvBoolean.default("false"),
   /** Maximum accepted request body size, in bytes. */
-  BRIDGE_MAX_BODY_BYTES: z.coerce.number().int().positive().default(16 * 1024 * 1024),
+  BRIDGE_MAX_BODY_BYTES: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(16 * 1024 * 1024),
   /** Maximum outstanding commands before enqueue fails with `QUEUE_FULL`. */
   BRIDGE_QUEUE_MAX: z.coerce.number().int().positive().default(256),
+  /** Enables the Prometheus `/metrics` endpoint. */
+  BRIDGE_METRICS_ENABLED: EnvBoolean.default("false"),
 });
 
 /** Validated server configuration, derived from the process environment. */

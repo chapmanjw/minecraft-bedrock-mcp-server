@@ -15,8 +15,7 @@ export const blockTools: readonly ToolDefinition[] = [
   defineQueuedTool({
     name: "mc_block_get",
     title: "Get a block",
-    description:
-      "Returns the type, permutation states, and components of the block at a location.",
+    description: "Returns the type, permutation states, and components of the block at a location.",
     inputShape: { dimension: DimensionSchema, location: Vector3Schema },
     annotations: READ_ONLY,
   }),

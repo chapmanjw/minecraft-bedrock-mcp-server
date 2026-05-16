@@ -16,7 +16,10 @@
       "PowerShell(npm run build 2>&1)",
       "PowerShell(\"---\")",
       "PowerShell(\"=== LINT ===\")",
-      "PowerShell(\"=== BUILD ===\")"
+      "PowerShell(\"=== BUILD ===\")",
+      "PowerShell(npm run format 2>&1)",
+      "PowerShell(npm run format:check 2>&1)",
+      "PowerShell(\"=== FORMAT ===\")"
     ]
   }
 }

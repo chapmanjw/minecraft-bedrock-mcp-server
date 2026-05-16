@@ -2,10 +2,7 @@ import { z } from "zod";
 import { defineQueuedTool, type ToolDefinition } from "./tool-definition.js";
 
 const ObjectiveSchema = z.string().min(1).describe("Scoreboard objective id.");
-const ParticipantSchema = z
-  .string()
-  .min(1)
-  .describe("A player name or other scoreboard identity.");
+const ParticipantSchema = z.string().min(1).describe("A player name or other scoreboard identity.");
 
 /** Scoreboard objective and score operations. */
 export const scoreboardTools: readonly ToolDefinition[] = [

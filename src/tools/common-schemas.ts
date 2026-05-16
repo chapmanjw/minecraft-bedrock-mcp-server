@@ -13,10 +13,7 @@ export const DimensionSchema = z.enum(["overworld", "nether", "the_end"]);
 export type Dimension = z.infer<typeof DimensionSchema>;
 
 /** A chat message: plain text, or a structured rawtext object. */
-export const MessageSchema = z.union([
-  z.string(),
-  z.object({ rawtext: z.array(z.unknown()) }),
-]);
+export const MessageSchema = z.union([z.string(), z.object({ rawtext: z.array(z.unknown()) })]);
 export type Message = z.infer<typeof MessageSchema>;
 
 /** A block type identifier, e.g. `minecraft:stone`. */

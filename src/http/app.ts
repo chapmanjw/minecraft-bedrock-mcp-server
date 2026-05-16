@@ -13,10 +13,12 @@ import type { SubscriptionRegistry } from "../events/subscription-registry.js";
 import { registerMcpRoute } from "../mcp/mcp-route.js";
 import type { SessionManager } from "../mcp/session-manager.js";
 import type { Logger } from "../observability/logger.js";
+import type { Metrics } from "../observability/metrics.js";
 import type { CommandQueue } from "../queue/command-queue.js";
 import { SERVER_VERSION } from "../server-info.js";
 import { bearerAuth } from "./authentication.js";
 import { registerHealthRoute } from "./health-route.js";
+import { registerMetricsRoute } from "./metrics-route.js";
 
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
@@ -27,6 +29,8 @@ export interface AppDependencies {
   readonly queue: CommandQueue;
   readonly subscriptions: SubscriptionRegistry;
   readonly sessionManager: SessionManager;
+  /** Present only when `BRIDGE_METRICS_ENABLED` is set. */
+  readonly metrics?: Metrics;
   readonly tls: TlsMaterial | null;
 }
 
@@ -46,11 +50,11 @@ function rateLimitKey(authorization: string | undefined): string {
 
 /**
  * Assembles the Fastify application: an unauthenticated health probe, the
- * agent-token `/bridge` surface, and the client-token, rate-limited `/mcp`
- * surface. The caller is responsible for calling `listen`.
+ * agent-token `/bridge` surface, the client-token `/mcp` surface, and — when
+ * enabled — a client-token `/metrics` surface. The caller calls `listen`.
  */
 export function createApp(deps: AppDependencies): FastifyInstance {
-  const { environment, logger, queue, subscriptions, sessionManager, tls } = deps;
+  const { environment, logger, queue, subscriptions, sessionManager, metrics, tls } = deps;
 
   // Pin Fastify's logger generic to FastifyBaseLogger so the assembled
   // instance is the plain FastifyInstance the route helpers accept.
@@ -63,6 +67,13 @@ export function createApp(deps: AppDependencies): FastifyInstance {
     trustProxy: environment.BRIDGE_TRUST_PROXY,
     ...(tls === null ? {} : { https: { cert: tls.cert, key: tls.key } }),
   });
+
+  if (metrics !== undefined) {
+    app.addHook("onResponse", (request, reply, done) => {
+      metrics.recordHttpRequest(request.method, reply.statusCode);
+      done();
+    });
+  }
 
   const origins = corsOrigins(environment);
   if (origins !== null) {
@@ -104,6 +115,18 @@ export function createApp(deps: AppDependencies): FastifyInstance {
     },
     { prefix: "/mcp" },
   );
+
+  // Metrics surface — Prometheus scrape, authenticated with the client token.
+  if (metrics !== undefined) {
+    void app.register(
+      (scope, _opts, done) => {
+        scope.addHook("onRequest", bearerAuth("client", environment.BRIDGE_CLIENT_TOKEN));
+        registerMetricsRoute(scope, metrics);
+        done();
+      },
+      { prefix: "/metrics" },
+    );
+  }
 
   return app;
 }

@@ -3,10 +3,7 @@ import { EntityIdSchema, Vector3Schema } from "./common-schemas.js";
 import { defineQueuedTool, type ToolDefinition } from "./tool-definition.js";
 
 /** The scope a dynamic property is stored on — the world, or an entity. */
-const PropertyScopeSchema = z.union([
-  z.literal("world"),
-  z.object({ entity_id: EntityIdSchema }),
-]);
+const PropertyScopeSchema = z.union([z.literal("world"), z.object({ entity_id: EntityIdSchema })]);
 
 /** A dynamic property value. */
 const PropertyValueSchema = z.union([z.string(), z.number(), z.boolean(), Vector3Schema]);
