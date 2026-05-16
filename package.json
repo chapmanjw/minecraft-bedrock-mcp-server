@@ -1,0 +1,58 @@
+{
+  "name": "minecraft-bedrock-mcp-server",
+  "version": "0.1.0",
+  "description": "Model Context Protocol server that bridges MCP clients to a Minecraft Bedrock Dedicated Server.",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "minecraft",
+    "minecraft-bedrock",
+    "bedrock-dedicated-server",
+    "bds",
+    "ai-agents"
+  ],
+  "license": "MIT",
+  "author": "John Chapman",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chapmanjw/minecraft-bedrock-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chapmanjw/minecraft-bedrock-mcp-server/issues"
+  },
+  "homepage": "https://github.com/chapmanjw/minecraft-bedrock-mcp-server#readme",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "bin": {
+    "minecraft-bedrock-mcp-server": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "@types/node": "^20.17.0",
+    "@vitest/coverage-v8": "^3.0.0",
+    "eslint": "^9.13.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.12.0",
+    "vitest": "^3.0.0"
+  }
+}

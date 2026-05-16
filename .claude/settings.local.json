@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebSearch",
+      "WebFetch(domain:www.npmjs.com)",
+      "PowerShell(node --version)",
+      "PowerShell(npm --version)",
+      "PowerShell(git remote get-url origin)",
+      "PowerShell(git config user.name)",
+      "PowerShell(git config user.email)",
+      "Bash(npm install *)",
+      "PowerShell(npm run typecheck 2>&1)",
+      "PowerShell(npm test 2>&1)",
+      "PowerShell(npm run lint 2>&1)",
+      "PowerShell(npm run build 2>&1)"
+    ]
+  }
+}
