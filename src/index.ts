@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+import { join } from "node:path";
 import { ConfigError } from "./config/config-error.js";
 import { loadEnvironment, type Environment } from "./config/environment.js";
 import { loadTlsMaterial, type TlsMaterial } from "./config/tls.js";
+import { createSubscriptionRegistry } from "./events/subscription-registry.js";
 import { createApp } from "./http/app.js";
 import { createMcpServer } from "./mcp/mcp-server-factory.js";
 import { createSessionManager } from "./mcp/session-manager.js";
@@ -9,9 +11,13 @@ import { createLogger } from "./observability/logger.js";
 import { createCommandQueue } from "./queue/command-queue.js";
 import { createCommandThrottle } from "./queue/command-throttle.js";
 import { SERVER_NAME, SERVER_VERSION } from "./server-info.js";
+import { createStructureFileStore } from "./structures/structure-file-store.js";
 
 /** Default per-kind command admission rate, protecting the script watchdog. */
 const DEFAULT_THROTTLE = { ratePerSecond: 20, burst: 40 } as const;
+
+/** Events retained per subscription before the oldest are dropped. */
+const EVENT_BUFFER_SIZE = 512;
 
 /** Writes a message to stderr and exits non-zero. */
 function fail(message: string): never {
@@ -62,8 +68,22 @@ async function main(): Promise<void> {
     maxOutstanding: environment.BRIDGE_QUEUE_MAX,
     livenessWindowMs: environment.BRIDGE_POLL_TIMEOUT_MS * 2,
   });
-  const sessionManager = createSessionManager({ logger, createServer: createMcpServer });
-  const app = createApp({ environment, logger, queue, sessionManager, tls });
+  const subscriptions = createSubscriptionRegistry({ bufferSize: EVENT_BUFFER_SIZE });
+  const structureFiles = createStructureFileStore(
+    join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures"),
+  );
+  const sessionManager = createSessionManager({
+    logger,
+    createServer: () =>
+      createMcpServer({
+        queue,
+        subscriptions,
+        structureFiles,
+        logger,
+        commandTimeoutMs: environment.BRIDGE_COMMAND_TIMEOUT_MS,
+      }),
+  });
+  const app = createApp({ environment, logger, queue, subscriptions, sessionManager, tls });
 
   let shuttingDown = false;
   async function shutdown(signal: NodeJS.Signals): Promise<void> {
@@ -90,7 +110,11 @@ async function main(): Promise<void> {
 
   const scheme = tls === null ? "http" : "https";
   logger.info(
-    { name: SERVER_NAME, version: SERVER_VERSION, address: `${scheme}://${environment.BRIDGE_HOST}:${environment.BRIDGE_PORT}` },
+    {
+      name: SERVER_NAME,
+      version: SERVER_VERSION,
+      address: `${scheme}://${environment.BRIDGE_HOST}:${environment.BRIDGE_PORT}`,
+    },
     "bridge server listening",
   );
 }

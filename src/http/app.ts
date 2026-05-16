@@ -3,19 +3,20 @@ import type { IncomingMessage } from "node:http";
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import { registerEventRoute } from "../bridge/event-route.js";
+import { registerHandshakeRoute } from "../bridge/handshake-route.js";
+import { registerPollRoute } from "../bridge/poll-route.js";
+import { registerResultRoute } from "../bridge/result-route.js";
 import { corsOrigins, type Environment } from "../config/environment.js";
 import type { TlsMaterial } from "../config/tls.js";
+import type { SubscriptionRegistry } from "../events/subscription-registry.js";
+import { registerMcpRoute } from "../mcp/mcp-route.js";
+import type { SessionManager } from "../mcp/session-manager.js";
 import type { Logger } from "../observability/logger.js";
 import type { CommandQueue } from "../queue/command-queue.js";
-import type { SessionManager } from "../mcp/session-manager.js";
 import { SERVER_VERSION } from "../server-info.js";
 import { bearerAuth } from "./authentication.js";
 import { registerHealthRoute } from "./health-route.js";
-import { registerPollRoute } from "../bridge/poll-route.js";
-import { registerResultRoute } from "../bridge/result-route.js";
-import { registerEventRoute } from "../bridge/event-route.js";
-import { registerHandshakeRoute } from "../bridge/handshake-route.js";
-import { registerMcpRoute } from "../mcp/mcp-route.js";
 
 const CORRELATION_ID_HEADER = "x-correlation-id";
 
@@ -24,6 +25,7 @@ export interface AppDependencies {
   readonly environment: Environment;
   readonly logger: Logger;
   readonly queue: CommandQueue;
+  readonly subscriptions: SubscriptionRegistry;
   readonly sessionManager: SessionManager;
   readonly tls: TlsMaterial | null;
 }
@@ -48,7 +50,7 @@ function rateLimitKey(authorization: string | undefined): string {
  * surface. The caller is responsible for calling `listen`.
  */
 export function createApp(deps: AppDependencies): FastifyInstance {
-  const { environment, logger, queue, sessionManager, tls } = deps;
+  const { environment, logger, queue, subscriptions, sessionManager, tls } = deps;
 
   // Pin Fastify's logger generic to FastifyBaseLogger so the assembled
   // instance is the plain FastifyInstance the route helpers accept.
@@ -76,8 +78,13 @@ export function createApp(deps: AppDependencies): FastifyInstance {
       bridge.addHook("onRequest", bearerAuth("agent", environment.BRIDGE_AGENT_TOKEN));
       registerPollRoute(bridge, queue, environment.BRIDGE_POLL_TIMEOUT_MS);
       registerResultRoute(bridge, queue);
-      registerEventRoute(bridge);
-      registerHandshakeRoute(bridge, SERVER_VERSION, environment.BRIDGE_POLL_TIMEOUT_MS);
+      registerEventRoute(bridge, subscriptions);
+      registerHandshakeRoute(
+        bridge,
+        SERVER_VERSION,
+        environment.BRIDGE_POLL_TIMEOUT_MS,
+        subscriptions,
+      );
       done();
     },
     { prefix: "/bridge" },

@@ -1,17 +1,36 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { SubscriptionRegistry } from "../events/subscription-registry.js";
+import type { Logger } from "../observability/logger.js";
+import type { CommandQueue } from "../queue/command-queue.js";
 import { SERVER_NAME, SERVER_VERSION } from "../server-info.js";
+import type { StructureFileStore } from "../structures/structure-file-store.js";
+import { allTools } from "../tools/index.js";
+import { registerTools } from "./tool-registry.js";
+
+/** Domain services shared by every per-session MCP server. */
+export interface McpServerDependencies {
+  readonly queue: CommandQueue;
+  readonly subscriptions: SubscriptionRegistry;
+  readonly structureFiles: StructureFileStore;
+  readonly logger: Logger;
+  readonly commandTimeoutMs: number;
+}
 
 /**
- * Creates an MCP server instance for a single client session.
- *
- * Each session gets its own `McpServer`; the instances are cheap and share the
- * process-wide domain services (the command queue and registries) through the
- * tools registered on them. Tool registration is wired in a later phase — for
- * now the server exposes the MCP protocol surface with no tools.
+ * Creates an MCP server for a single client session, with the full tool
+ * surface registered. Tool handlers close over the shared domain services; the
+ * per-session `McpServer` instances are otherwise cheap and independent.
  */
-export function createMcpServer(): McpServer {
-  return new McpServer({
-    name: SERVER_NAME,
-    version: SERVER_VERSION,
-  });
+export function createMcpServer(deps: McpServerDependencies): McpServer {
+  const server = new McpServer({ name: SERVER_NAME, version: SERVER_VERSION });
+  registerTools(server, allTools, (extra) => ({
+    queue: deps.queue,
+    subscriptions: deps.subscriptions,
+    structureFiles: deps.structureFiles,
+    logger: deps.logger,
+    commandTimeoutMs: deps.commandTimeoutMs,
+    correlationId: String(extra.requestId),
+    signal: extra.signal,
+  }));
+  return server;
 }

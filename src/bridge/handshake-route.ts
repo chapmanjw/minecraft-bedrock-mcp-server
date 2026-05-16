@@ -1,4 +1,5 @@
 import type { FastifyInstance } from "fastify";
+import type { SubscriptionRegistry } from "../events/subscription-registry.js";
 import {
   HandshakeRequestSchema,
   PROTOCOL_VERSION,
@@ -10,12 +11,14 @@ import {
  * Registers `POST /handshake` (mounted at `/bridge/handshake`).
  *
  * Negotiates the bridge protocol version on behavior-pack startup. A pack
- * whose major version differs is refused with `409`.
+ * whose major version differs is refused with `409`. On acceptance the
+ * response replays active subscriptions so a restarted pack re-arms them.
  */
 export function registerHandshakeRoute(
   app: FastifyInstance,
   serverVersion: string,
   pollTimeoutMs: number,
+  subscriptions: SubscriptionRegistry,
 ): void {
   app.post("/handshake", (request, reply) => {
     const parsed = HandshakeRequestSchema.safeParse(request.body);
@@ -51,7 +54,11 @@ export function registerHandshakeRoute(
       server_version: serverVersion,
       protocol_version: PROTOCOL_VERSION,
       poll_timeout_ms: pollTimeoutMs,
-      resync_subscriptions: [],
+      resync_subscriptions: subscriptions.list().map((subscription) => ({
+        subscription_id: subscription.id,
+        event_type: subscription.eventType,
+        filter: subscription.filter,
+      })),
     };
     return reply.code(200).send(acceptance);
   });

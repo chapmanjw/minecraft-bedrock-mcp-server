@@ -1,11 +1,14 @@
+import { join } from "node:path";
 import type { FastifyInstance } from "fastify";
 import { loadEnvironment, type Environment } from "../../src/config/environment.js";
+import { createSubscriptionRegistry } from "../../src/events/subscription-registry.js";
 import { createApp } from "../../src/http/app.js";
 import { createMcpServer } from "../../src/mcp/mcp-server-factory.js";
 import { createSessionManager } from "../../src/mcp/session-manager.js";
 import { createLogger } from "../../src/observability/logger.js";
 import { createCommandQueue, type CommandQueue } from "../../src/queue/command-queue.js";
 import { createCommandThrottle } from "../../src/queue/command-throttle.js";
+import { createStructureFileStore } from "../../src/structures/structure-file-store.js";
 
 /** Bearer token the harness configures for the MCP client surface. */
 export const CLIENT_TOKEN = "test-client-token";
@@ -39,8 +42,22 @@ export function createTestHarness(overrides: Record<string, string> = {}): TestH
     maxOutstanding: environment.BRIDGE_QUEUE_MAX,
     livenessWindowMs: 60_000,
   });
-  const sessionManager = createSessionManager({ logger, createServer: createMcpServer });
-  const app = createApp({ environment, logger, queue, sessionManager, tls: null });
+  const subscriptions = createSubscriptionRegistry({ bufferSize: 128 });
+  const structureFiles = createStructureFileStore(
+    join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures"),
+  );
+  const sessionManager = createSessionManager({
+    logger,
+    createServer: () =>
+      createMcpServer({
+        queue,
+        subscriptions,
+        structureFiles,
+        logger,
+        commandTimeoutMs: environment.BRIDGE_COMMAND_TIMEOUT_MS,
+      }),
+  });
+  const app = createApp({ environment, logger, queue, subscriptions, sessionManager, tls: null });
 
   return {
     app,
