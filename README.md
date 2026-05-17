@@ -14,17 +14,21 @@ APIs this project depends on** — beta modules can be discontinued outright wit
 replacement. Pin your BDS to a known-good version, do not auto-update it, and keep the BDS, the
 behavior pack, and this server upgraded together. Treat the whole stack as experimental.
 
-## The two repositories
+## The three repositories
 
-This system is split across two repositories:
+This system is split across three repositories:
 
 | Repository                                                                                                    | Role                                                                                   |
 | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
 | **`minecraft-bedrock-mcp-server`** (this repo)                                                                | The MCP server. Speaks MCP to clients and bridges commands to the world.               |
 | **[`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)** | The BDS behavior pack. Runs inside the world and executes commands via the Script API. |
+| **[`minecraft-bedrock-claude-plugin`](https://github.com/chapmanjw/minecraft-bedrock-claude-plugin)**         | A Claude Code plugin — skills that guide this setup and agents that build in the world. |
 
-This README is the **end-to-end guide** — it covers standing up the whole stack. The behavior
-pack repository documents the pack itself in more depth.
+The first two repositories are required. This README is the **end-to-end guide** — it covers
+standing up the whole stack. The behavior pack repository documents the pack itself in more
+depth. The Claude plugin is optional but recommended: it turns the tutorial below into a
+guided, step-by-step experience and adds a builder agent for designing and constructing things
+in the world.
 
 ## How it works
 
@@ -66,6 +70,12 @@ This walkthrough takes you from nothing to an AI agent building in your world. I
 > **same Ubuntu (Linux) host**. The commands below are written for Ubuntu. BDS also ships for
 > Windows; if you run it there, adapt the paths and shell commands accordingly — the configuration
 > values are identical.
+
+> **Prefer a guided setup?** The
+> [`minecraft-bedrock-claude-plugin`](https://github.com/chapmanjw/minecraft-bedrock-claude-plugin)
+> turns these eight steps into an interactive walkthrough inside Claude Code — its
+> `minecraft-mcp-setup` agent runs the whole sequence with you, on Linux or Windows. The manual
+> tutorial below remains the canonical reference.
 
 ## Prerequisites
 
