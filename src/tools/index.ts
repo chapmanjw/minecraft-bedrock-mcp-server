@@ -10,6 +10,7 @@ import { scoreboardTools } from "./scoreboard-tools.js";
 import { serverTools } from "./server-tools.js";
 import { structureFileTools } from "./structure-file-tools.js";
 import { structureTools } from "./structure-tools.js";
+import { structureUploadTools } from "./structure-upload-tools.js";
 import type { ToolDefinition } from "./tool-definition.js";
 import { worldTools } from "./world-tools.js";
 
@@ -19,6 +20,7 @@ export const allTools: readonly ToolDefinition[] = [
   ...blockTools,
   ...structureTools,
   ...structureFileTools,
+  ...structureUploadTools,
   ...entityTools,
   ...playerTools,
   ...inventoryTools,

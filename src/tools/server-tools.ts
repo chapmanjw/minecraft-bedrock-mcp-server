@@ -9,6 +9,15 @@ export const serverTools: readonly ToolDefinition[] = [
     inputShape: {},
   }),
   defineQueuedTool({
+    name: "mc_server_reload_world",
+    title: "Reload the world",
+    description:
+      "Runs /reload all — reloads behavior and resource packs, re-indexing uploaded " +
+      ".mcstructure files, and rejoins online players. Requires at least one online " +
+      "player; with none, restart the dedicated server instead.",
+    inputShape: {},
+  }),
+  defineQueuedTool({
     name: "mc_server_save_world",
     title: "Save the world",
     description: "Forces the world to save to disk.",

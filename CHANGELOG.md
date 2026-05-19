@@ -6,6 +6,28 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-18
+
+Pairs with [`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)
+v0.2.0 — install both together.
+
+### Added
+
+- `mc_structure_upload` tool — encodes a block-grid structure definition (a block palette plus
+  a flat ZYX index array, supplied inline or as a host-side JSON file) into a `.mcstructure`
+  file in the behavior pack's reserved `mcp/` namespace, then reloads the world so it can be
+  placed as `mcp:<name>`. Lets a client materialize structures that are impractical to build
+  block by block.
+- `.mcstructure` encoder (`src/structures/mcstructure.ts`) — assembles the little-endian NBT
+  structure file via `prismarine-nbt` and enforces the format's invariants.
+- `mc_server_reload_world` tool — runs `/reload all`, re-indexing uploaded structure files and
+  rejoining online players.
+
+### Changed
+
+- The structure-file store writes atomically — to a temporary file, then renamed into place,
+  with an EBUSY retry — so a reader (or BDS) never observes a half-written `.mcstructure`.
+
 ## [0.1.0] - 2026-05-16
 
 Initial release. Pairs with [`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)

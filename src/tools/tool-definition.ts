@@ -11,6 +11,8 @@ export interface ToolContext {
   readonly queue: CommandQueue;
   readonly subscriptions: SubscriptionRegistry;
   readonly structureFiles: StructureFileStore;
+  /** The `mcp:` namespace store — `structures/mcp/` — used by `mc_structure_upload`. */
+  readonly mcpStructures: StructureFileStore;
   readonly logger: Logger;
   /** Correlates this invocation across logs and any command it enqueues. */
   readonly correlationId: string;

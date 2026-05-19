@@ -1,8 +1,13 @@
-import { mkdir, readFile, readdir, stat, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, readdir, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { basename, join, resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
 import { BridgeError } from "../errors/bridge-error.js";
 
 const STRUCTURE_EXTENSION = ".mcstructure";
+
+/** Retry budget for the atomic rename when BDS briefly holds the target open. */
+const RENAME_RETRY_LIMIT = 4;
+const RENAME_RETRY_DELAY_MS = 50;
 
 /** Metadata for a `.mcstructure` file. */
 export interface StructureFileInfo {
@@ -89,7 +94,29 @@ export function createStructureFileStore(rootDir: string): StructureFileStore {
     async write(name, data) {
       const path = resolveFile(name);
       await mkdir(root, { recursive: true });
-      await writeFile(path, data);
+      // Write to a temp file and rename it into place, so a reader — or BDS
+      // itself — never observes a half-written structure. On Windows BDS may
+      // briefly hold the target file open, surfacing as EBUSY; retry the
+      // rename a few times before giving up.
+      const tempPath = `${path}.${process.pid}.${Date.now()}.tmp`;
+      await writeFile(tempPath, data);
+      for (let attempt = 0; ; attempt += 1) {
+        try {
+          await rename(tempPath, path);
+          break;
+        } catch (error) {
+          if (isErrno(error) && error.code === "EBUSY" && attempt < RENAME_RETRY_LIMIT) {
+            await delay(RENAME_RETRY_DELAY_MS);
+            continue;
+          }
+          await unlink(tempPath).catch(() => undefined);
+          throw new BridgeError({
+            code: "STRUCTURE_FILE_ERROR",
+            message: `unable to write structure file '${name}'`,
+            cause: error,
+          });
+        }
+      }
       return { name: basename(path), bytes: data.byteLength };
     },
 
