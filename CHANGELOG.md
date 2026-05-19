@@ -6,6 +6,29 @@ All notable changes to this project are documented in this file. The format is b
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-18
+
+Reworks the structure-upload feature from 0.2.0, which did not work on a
+dedicated server. Pairs with [`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)
+v0.3.0 — install both together.
+
+### Added
+
+- `mc_structure_create_from_blocks` — builds a saved structure from a
+  run-length-encoded block grid: a block palette plus `[count, palette_index]`
+  runs in ZYX order. The behavior pack builds it in-world as a world-saved
+  structure, so it is immediately placeable with `mc_structure_place`,
+  persists across reloads, and needs no world reload or filesystem access.
+
+### Removed
+
+- `mc_structure_upload`, `mc_server_reload_world`, the `.mcstructure` NBT
+  encoder, and the `prismarine-nbt` dependency. The 0.2.0 upload tool wrote a
+  `.mcstructure` file into the behavior pack and relied on `/reload all` to
+  index it; on a Bedrock Dedicated Server that reload does not re-index
+  structure files, and the host-side `definition_path` is unreachable from a
+  remote client. `mc_structure_create_from_blocks` replaces it.
+
 ## [0.2.0] - 2026-05-18
 
 Pairs with [`minecraft-bedrock-mcp-behavior-pack`](https://github.com/chapmanjw/minecraft-bedrock-mcp-behavior-pack)

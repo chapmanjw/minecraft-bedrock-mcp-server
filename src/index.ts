@@ -71,11 +71,9 @@ async function main(): Promise<void> {
     livenessWindowMs: environment.BRIDGE_POLL_TIMEOUT_MS * 2,
   });
   const subscriptions = createSubscriptionRegistry({ bufferSize: EVENT_BUFFER_SIZE });
-  const structuresDir = join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures");
-  const structureFiles = createStructureFileStore(structuresDir);
-  // `mc_structure_upload` writes into the reserved `mcp/` namespace folder, so
-  // an uploaded structure is always placed as `mcp:<name>`.
-  const mcpStructures = createStructureFileStore(join(structuresDir, "mcp"));
+  const structureFiles = createStructureFileStore(
+    join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures"),
+  );
 
   // When metrics are enabled, the queue is wrapped to record command metrics
   // and the gauges sample the base queue and session manager at scrape time.
@@ -98,7 +96,6 @@ async function main(): Promise<void> {
         queue,
         subscriptions,
         structureFiles,
-        mcpStructures,
         logger,
         commandTimeoutMs: environment.BRIDGE_COMMAND_TIMEOUT_MS,
       }),

@@ -57,6 +57,37 @@ export const structureTools: readonly ToolDefinition[] = [
     },
   }),
   defineQueuedTool({
+    name: "mc_structure_create_from_blocks",
+    title: "Create a structure from a block grid",
+    description:
+      "Builds a saved structure from a run-length-encoded block grid — for materializing " +
+      "structures that are computed rather than built in the world. `palette` lists the " +
+      "distinct block states; `blocks` is an array of [count, palette_index] runs in ZYX " +
+      "order (index z + size.z * (y + size.y * x)) whose counts sum to size.x*size.y*size.z. " +
+      "A palette index of -1 leaves a structure void. The structure is built in-world and " +
+      "is immediately placeable with mc_structure_place.",
+    inputShape: {
+      id: StructureIdSchema,
+      size: Vector3Schema,
+      palette: z
+        .array(
+          z.object({
+            name: BlockTypeSchema,
+            states: BlockStatesSchema.optional(),
+          }),
+        )
+        .min(1)
+        .describe("Distinct block states the block grid indexes into, from 0."),
+      blocks: z
+        .array(z.tuple([z.number().int().positive(), z.number().int().gte(-1)]))
+        .describe(
+          "Run-length-encoded palette indices in ZYX order: [count, index] pairs whose " +
+            "counts sum to the volume. An index of -1 is a structure void.",
+        ),
+      save_mode: z.enum(["memory", "world"]).optional(),
+    },
+  }),
+  defineQueuedTool({
     name: "mc_structure_place",
     title: "Place a structure",
     description: "Places a saved structure into the world.",

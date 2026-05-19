@@ -43,9 +43,9 @@ export function createTestHarness(overrides: Record<string, string> = {}): TestH
     livenessWindowMs: 60_000,
   });
   const subscriptions = createSubscriptionRegistry({ bufferSize: 128 });
-  const structuresDir = join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures");
-  const structureFiles = createStructureFileStore(structuresDir);
-  const mcpStructures = createStructureFileStore(join(structuresDir, "mcp"));
+  const structureFiles = createStructureFileStore(
+    join(environment.BRIDGE_BEHAVIOR_PACK_PATH, "structures"),
+  );
   const sessionManager = createSessionManager({
     logger,
     createServer: () =>
@@ -53,7 +53,6 @@ export function createTestHarness(overrides: Record<string, string> = {}): TestH
         queue,
         subscriptions,
         structureFiles,
-        mcpStructures,
         logger,
         commandTimeoutMs: environment.BRIDGE_COMMAND_TIMEOUT_MS,
       }),

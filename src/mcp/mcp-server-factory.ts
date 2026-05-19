@@ -12,8 +12,6 @@ export interface McpServerDependencies {
   readonly queue: CommandQueue;
   readonly subscriptions: SubscriptionRegistry;
   readonly structureFiles: StructureFileStore;
-  /** The `mcp:` namespace store — `structures/mcp/` — used by `mc_structure_upload`. */
-  readonly mcpStructures: StructureFileStore;
   readonly logger: Logger;
   readonly commandTimeoutMs: number;
 }
@@ -29,7 +27,6 @@ export function createMcpServer(deps: McpServerDependencies): McpServer {
     queue: deps.queue,
     subscriptions: deps.subscriptions,
     structureFiles: deps.structureFiles,
-    mcpStructures: deps.mcpStructures,
     logger: deps.logger,
     commandTimeoutMs: deps.commandTimeoutMs,
     correlationId: String(extra.requestId),

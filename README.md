@@ -174,7 +174,7 @@ The world's absolute path is now `/opt/bedrock-server/worlds/mcp-world` — you 
    `/opt/bedrock-server/worlds/mcp-world/world_behavior_packs.json`:
 
    ```json
-   [{ "pack_id": "fa013817-66f2-4a5f-a724-1347f912bd40", "version": [0, 2, 0] }]
+   [{ "pack_id": "fa013817-66f2-4a5f-a724-1347f912bd40", "version": [0, 3, 0] }]
    ```
 
 The pack's absolute path is now
@@ -450,7 +450,7 @@ Or with Docker. Each `v*` tag publishes a multi-arch image (`linux/amd64`,
 docker run --env-file .env -p 8765:8765 ghcr.io/chapmanjw/minecraft-bedrock-mcp-server:latest
 ```
 
-Pin to a specific version (e.g. `:0.2.0`) for reproducible deployments. To build the
+Pin to a specific version (e.g. `:0.3.0`) for reproducible deployments. To build the
 image from source instead:
 
 ```sh
@@ -525,23 +525,23 @@ are logged correctly.
 
 ## Tool surface
 
-79 tools across 13 domains, consistently named `mc_<domain>_<action>`:
+78 tools across 13 domains, consistently named `mc_<domain>_<action>`:
 
-| Domain          | Examples                                                                   |
-| --------------- | -------------------------------------------------------------------------- |
-| World           | `mc_world_get_info`, `mc_world_set_time`, `mc_world_set_weather`           |
-| Blocks          | `mc_block_get`, `mc_block_fill`, `mc_block_clone`                          |
-| Structures      | `mc_structure_create_from_world`, `mc_structure_place`                     |
-| Structure files | `mc_structure_upload`, `mc_structure_file_read`, `mc_structure_file_write` |
-| Entities        | `mc_entity_spawn`, `mc_entity_teleport`, `mc_entity_apply_effect`          |
-| Players         | `mc_player_list`, `mc_player_give_item`, `mc_player_set_gamemode`          |
-| Inventory       | `mc_inventory_get`, `mc_inventory_set_slot`                                |
-| Scoreboard      | `mc_scoreboard_set_score`, `mc_scoreboard_add_objective`                   |
-| Properties      | `mc_property_get`, `mc_property_set`                                       |
-| Effects         | `mc_explosion_create`, `mc_lightning_strike`                               |
-| Events          | `mc_event_subscribe`, `mc_event_poll`                                      |
-| Server          | `mc_server_save_world`, `mc_server_reload_world`, `mc_server_get_status`   |
-| Escape hatch    | `mc_run_command`                                                           |
+| Domain          | Examples                                                          |
+| --------------- | ----------------------------------------------------------------- |
+| World           | `mc_world_get_info`, `mc_world_set_time`, `mc_world_set_weather`  |
+| Blocks          | `mc_block_get`, `mc_block_fill`, `mc_block_clone`                 |
+| Structures      | `mc_structure_create_from_blocks`, `mc_structure_place`           |
+| Structure files | `mc_structure_file_read`, `mc_structure_file_write`               |
+| Entities        | `mc_entity_spawn`, `mc_entity_teleport`, `mc_entity_apply_effect` |
+| Players         | `mc_player_list`, `mc_player_give_item`, `mc_player_set_gamemode` |
+| Inventory       | `mc_inventory_get`, `mc_inventory_set_slot`                       |
+| Scoreboard      | `mc_scoreboard_set_score`, `mc_scoreboard_add_objective`          |
+| Properties      | `mc_property_get`, `mc_property_set`                              |
+| Effects         | `mc_explosion_create`, `mc_lightning_strike`                      |
+| Events          | `mc_event_subscribe`, `mc_event_poll`                             |
+| Server          | `mc_server_save_world`, `mc_server_get_status`                    |
+| Escape hatch    | `mc_run_command`                                                  |
 
 ## Stability and versioning
 
