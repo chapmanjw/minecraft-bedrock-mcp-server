@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/logo.png" width="200" alt="Minecraft Bedrock MCP Server logo">
+</p>
+
 # Minecraft Bedrock MCP Server
 
 A [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server that bridges MCP
