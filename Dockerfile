@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # --- build stage -------------------------------------------------------------
-FROM node:20-slim AS build
+FROM node:26-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
@@ -10,7 +10,7 @@ COPY src ./src
 RUN npm run build
 
 # --- runtime stage -----------------------------------------------------------
-FROM node:20-slim AS runtime
+FROM node:26-slim AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
 COPY package.json package-lock.json ./
